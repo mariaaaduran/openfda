@@ -12,5 +12,5 @@ conn.close()
 drugs = json.loads(drugs_raw)
 
 drugs = drugs["results"]
-for i in range (0, 10):
-	print ("The id of the drug", i+1, "is the next one:", drugs[i]["id"]
+
+https://api.fda.gov/drug/event.json?limit=10
