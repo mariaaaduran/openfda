@@ -15,9 +15,7 @@ my_drug = results[0]
 id_drug = my_drug["id"]
 print("The id of the drug is", id_drug)
 
-for element in repo:
-    print("The id of the drug is",id_drug)
-    print("The purpose of the drug is", results[0]["purpose"]
-    print ("The manufacturer name of the drug is", results[0]["openfda"]["manufacturer_name"]
+           
+ 
 
 
