@@ -1,12 +1,28 @@
-
 import socket
 
-PORT = 8093
+IP = "127.0.0.1"
+PORT = 9006
 MAX_OPEN_REQUESTS = 5
 
-def processing_client(clientsocket):
-    import http.client
-    import json
+import http.client
+import json
+
+def process_client(clientsocket):
+
+    # I reads the message that comes from the socket
+    # We receive bytes and we decode them into an UTF-8 string
+    request_msg = clientsocket.recv(1024).decode("utf-8")
+    request_msg = request_msg.replace("\r", "").split("\n")
+    request_line = request_msg[0]
+    request = request_line.split(" ")
+    req_cmd = request[0]
+    path = request[1]
+
+    print("")
+    print("REQUEST: ")
+    print("Command: {}".format(req_cmd))
+    print("Path: {}".format(path))
+    print("")
 
     headers = {'User-Agent': 'http-client'}
 
@@ -19,52 +35,62 @@ def processing_client(clientsocket):
 
     repos = json.loads(repos_raw)
 
-    list = []
-    i = 0
-    intro = "<ol>" + "\n"
-    end = "<\ol>"
+    # We write them down in an html file
+    f = open('labels.html', 'w')
+    f.write('<html><head><h1>DRUG LABEL LIST</h1><body style="background-color: green">')
+    for i in range(len(repos['results'])):
+        try:
+            drug = repos['results'][i]["openfda"]["generic_name"][0]
+            f.write('\n<li>')
+            f.write(' generic name is: ')
+            f.write(drug)
+            f.write('</li>')  # this will be removed when \n error is fixed
+        except KeyError:
+            continue
+    f.close()
 
-    while i < 10:
-        if 'active_ingredient' in repos['results'][i]:
-            i += 1
-            list.append(repos['results'][i]['active_ingredient'][0])
-        else:
-            i += 1
-            list.append("This index hasn´t any drug")
+    #We read the html page:
 
-    with open("drug.html","w") as f:
-        f.write(intro)
-        for element in list:
-            element_1 = "<\t>" + "<li>" + element + "<\li>"
-            f.write(element_1)
-        f.write(end)
-
-    with open("drug.html","r") as f:
-        file = f.read()
-
-    web_contents = file
-    web_headers = "HTTP/1.1 200"
-    web_headers += "\n" + "Content-Type: text/html"
-    web_headers += "\n" + "Content-Length: %i" % len(str.encode(web_contents))
-    clientsocket.send(str.encode(web_headers + "\n\n" + web_contents))
-    clientsocket.close()
+    filename = "labels.html"
 
 
+    print("File to send: {}".format(filename))
+
+    with open(filename, "r") as g:
+        content = g.read()
+
+    #OK
+    status_line = "HTTP/1.1 200 OK\n"
+
+    #We build the header
+    header = "Content-Type: text/html\n"
+    header += "Content-Length: {}\n".format(len(str.encode(content)))
+
+    # We build the message joining together all the parts
+    response_msg = str.encode(status_line + header + "\n" + content)
+    clientsocket.send(response_msg)
+
+
+# Create the server cocket, for receiving the connections
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-hostname = socket.gethostname()
-
-hostname = "localhost"
 try:
-    serversocket.bind((hostname, PORT))
+
+    serversocket.bind((IP, PORT))
     serversocket.listen(MAX_OPEN_REQUESTS)
 
     while True:
-        print ("Waiting for connections at %s %i" % (hostname, PORT))
+
+        print("Waiting for clients at IP: {}, Puerto: {}".format(IP, PORT))
         (clientsocket, address) = serversocket.accept()
-        
-        
+
+        # Process the client request
+        print("  Client request recgeived. IP: {}".format(address))
+        print("Server socket: {}".format(serversocket))
+        print("Client socket: {}".format(clientsocket))
         process_client(clientsocket)
+        clientsocket.close()
 
 except socket.error:
-    print("Problemas using port %i. Permission?" % PORT)
+    print("Socket error. Problemas with the PORT {}".format(PORT))
+    print("Launch it again in another port (and check the IP)")
