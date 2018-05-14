@@ -1,4 +1,3 @@
-
 import http.server
 import json
 import socketserver
@@ -10,117 +9,106 @@ PORT = 8000
 OPENFDA_BASIC = False
 
 
-class OpenFDAClient():
 
-    def send_query(self, query):
-        """
-        Send a query to the OpenFDA API
-        :param query: query to be sent
-        :return: the result of the query in JSON format
-        """
+class HTML():
 
-        headers = {'User-Agent': 'http-client'}
+    def create_list_html(self, things ):
 
-        conn = http.client.HTTPSConnection("api.fda.gov")
-
-        # Get a  https://api.fda.gov/drug/label.json drug label from this URL and
-        # extract what is the id,
-        # the purpose of the drug and the manufacturer_name
-
-        query_url = "/drug/label.json"
-
-        if query:
-            query_url += "?" + query
-
-        print("Sending to OpenFDA the query", query_url)
-
-        conn.request("GET", query_url, None, headers)
-        r1 = conn.getresponse()
-        print(r1.status, r1.reason)
-        res_raw = r1.read().decode("utf-8")
-        conn.close()
-
-        res = json.loads(res_raw)
-
-        if 'results' in res:
-            items = res['results']
-        else:
-            items = []
-
-        return items
-
-    def search_drugs(self, active_ingredient, limit=10):
-        """
-        Search for drugs given an active ingredient drug_name
-        :param drug_name: name of the drug to search
-        :param limit: Number of items to be included in the list
-        :return: a JSON list with the results
-        """
-
-        # drug_name for example: acetylsalicylic
-
-        query = 'search=active_ingredient:"%s"' % active_ingredient
-
-        if limit:
-            query += "&limit=" + str(limit)
-
-        drugs = self.send_query(query)
-        return drugs
-
-    def list_drugs(self, limit=10):
-        """
-        List default drugs
-        :param limit: Number of items to be included in the list
-        :return: a JSON list with the results
-        """
-
-        query = "limit=" + str(limit)
-
-        drugs = self.send_query(query)
-
-        return drugs
-
-    def search_companies(self, company_name, limit=10):
-        """
-        Search for companies given a company_name
-        :param company_name: name of the company to search
-        :return: a JSON list with the results
-        """
-
-        query = 'search=openfda.manufacturer_name:"%s"' % company_name
-
-        if limit:
-            query += "&limit=" + str(limit)
-
-        drugs = self.send_query(query)
-
-        return drugs
+        #We create a HTML list with parameters, also we´ll create de function to get a page not found fot the errors.
 
 
-class OpenFDAHTML():
+        listHTML = "<ul>"
+        for item in things:
+            listHTML += "<li>" + item + "</li>"
+        listHTML += "</ul>"
 
-    def build_html_list(self, items):
-        """
-        Creates a HTML list string with the items
-        :param items: list with the items to be included in the HTML list
-        :return: string with the HTML list
-        """
-
-        html_list = "<ul>"
-        for item in items:
-            html_list += "<li>" + item + "</li>"
-        html_list += "</ul>"
-
-        return html_list
+        return listHTML
 
 
-    def get_not_found_page(self):
+    def error_notfound(self):
         with open("not_found.html") as html_file:
             html = html_file.read()
 
         return html
 
-class OpenFDAParser():
+class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
+
+    def with_GET(self):
+
+        client = Client()
+        html_vis = HTML()
+        parser = Parser()
+
+        http_answer_code = 200
+        http_feedback = "<h1>Not supported</h1>"
+
+        if self.path == "/":
+
+            with open("openfda.html") as file_form:
+                form = file_form.read()
+                http_feedback = form
+        elif 'searchDrug' in self.path:
+            active_ingredient = None
+            limit = 10
+            params = self.path.split("?")[1].split("&")
+            for param in params:
+                param_name = param.split("=")[0]
+                param_value = param.split("=")[1]
+                if param_name == 'active_ingredient':
+                    active_ingredient = param_value
+                elif param_name == 'limit':
+                    limit = param_value
+            things = client.search_drugs(active_ingredient, limit)
+            http_feedback = html_vis.create_html_list(parser.parse_drugs(things))
+        elif 'listDrugs' in self.path:
+            limit = None
+            if len(self.path.split("?")) > 1:
+                limit = self.path.split("?")[1].split("=")[1]
+            things = client.list_drugs(limit)
+            http_feedback = html_vis.create_html_list(parser.parse_drugs(things))
+        elif 'searchCompany' in self.path:
+            company_name = None
+            limit = 10
+            params = self.path.split("?")[1].split("&")
+            for param in params:
+                param_name = param.split("=")[0]
+                param_value = param.split("=")[1]
+                if param_name == 'company':
+                    company_name = param_value
+                elif param_name == 'limit':
+                    limit = param_value
+            things = client.search_companies(company_name, limit)
+            http_feedback = html_vis.create_html_list(parser.parse_companies(things))
+        elif 'listCompanies' in self.path:
+            limit = None
+            if len(self.path.split("?")) > 1:
+                limit = self.path.split("?")[1].split("=")[1]
+            things = client.list_drugs(limit)
+            http_feedback = html_vis.create_html_list(parser.parse_companies(things))
+        elif 'listWarnings' in self.path:
+            limit = None
+            if len(self.path.split("?")) > 1:
+                limit = self.path.split("?")[1].split("=")[1]
+            things = client.list_drugs(limit)
+            http_feedback = html_vis.create_html_list(parser.parse_warnings(things))
+        else:
+            http_answer_code = 404
+            if not OPENFDA_BASIC:
+                url_found = False
+                http_feedback = html_vis.error_notfound()
+
+        # Send response status code
+        self.send_response(http_answer_code)
+
+        # Send the headers
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+        # Write content as utf-8 data
+        self.wfile.write(bytes(http_feedback, "utf8"))
+        return
+
+class Parser():
 
     def parse_companies(self, drugs):
         """
@@ -160,11 +148,9 @@ class OpenFDAParser():
         return drugs_labels
 
     def parse_warnings(self, drugs):
-        """
-        Given a OpenFDA result, extract the warnings data
-        :param drugs: result form a call to OpenFDA drugs API
-        :return: list with warnings info
-        """
+
+        #Given a OpenFDA result, we take the warning data form the drugs
+
 
         warnings = []
 
@@ -176,92 +162,90 @@ class OpenFDAParser():
         return warnings
 
 
-# HTTPRequestHandler class
-class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
-    # GET
-    def do_GET(self):
-        """
-        API to be supported
-        searchDrug?drug=<drug_name>
-        searchCompany?company=<company_name>
-        listDrugs
-        listCompanies
-        listWarnings
-        """
 
-        client = OpenFDAClient()
-        html_vis = OpenFDAHTML()
-        parser = OpenFDAParser()
+    class Client():
 
-        http_response_code = 200
-        http_response = "<h1>Not supported</h1>"
+        def send_query(self, query):
+            """
+            Send a query to the OpenFDA API
+            :param query: query to be sent
+            :return: the result of the query in JSON format
+            """
 
-        if self.path == "/":
-            # Return the HTML form for searching
-            with open("openfda.html") as file_form:
-                form = file_form.read()
-                http_response = form
-        elif 'searchDrug' in self.path:
-            active_ingredient = None
-            limit = 10
-            params = self.path.split("?")[1].split("&")
-            for param in params:
-                param_name = param.split("=")[0]
-                param_value = param.split("=")[1]
-                if param_name == 'active_ingredient':
-                    active_ingredient = param_value
-                elif param_name == 'limit':
-                    limit = param_value
-            items = client.search_drugs(active_ingredient, limit)
-            http_response = html_vis.build_html_list(parser.parse_drugs(items))
-        elif 'listDrugs' in self.path:
-            limit = None
-            if len(self.path.split("?")) > 1:
-                limit = self.path.split("?")[1].split("=")[1]
-            items = client.list_drugs(limit)
-            http_response = html_vis.build_html_list(parser.parse_drugs(items))
-        elif 'searchCompany' in self.path:
-            company_name = None
-            limit = 10
-            params = self.path.split("?")[1].split("&")
-            for param in params:
-                param_name = param.split("=")[0]
-                param_value = param.split("=")[1]
-                if param_name == 'company':
-                    company_name = param_value
-                elif param_name == 'limit':
-                    limit = param_value
-            items = client.search_companies(company_name, limit)
-            http_response = html_vis.build_html_list(parser.parse_companies(items))
-        elif 'listCompanies' in self.path:
-            limit = None
-            if len(self.path.split("?")) > 1:
-                limit = self.path.split("?")[1].split("=")[1]
-            items = client.list_drugs(limit)
-            http_response = html_vis.build_html_list(parser.parse_companies(items))
-        elif 'listWarnings' in self.path:
-            limit = None
-            if len(self.path.split("?")) > 1:
-                limit = self.path.split("?")[1].split("=")[1]
-            items = client.list_drugs(limit)
-            http_response = html_vis.build_html_list(parser.parse_warnings(items))
-        else:
-            http_response_code = 404
-            if not OPENFDA_BASIC:
-                url_found = False
-                http_response = html_vis.get_not_found_page()
+            headers = {'User-Agent': 'http-client'}
 
-        # Send response status code
-        self.send_response(http_response_code)
+            conn = http.client.HTTPSConnection("api.fda.gov")
 
-        # Send the headers
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+            # Get a  https://api.fda.gov/drug/label.json drug label from this URL and
+            # extract what is the id,
+            # the purpose of the drug and the manufacturer_name
 
-        # Write content as utf-8 data
-        self.wfile.write(bytes(http_response, "utf8"))
-        return
+            query_url = "/drug/label.json"
+
+            if query:
+                query_url += "?" + query
+
+            print("Sending to OpenFDA the query", query_url)
+
+            conn.request("GET", query_url, None, headers)
+            r1 = conn.getresponse()
+            print(r1.status, r1.reason)
+            res_raw = r1.read().decode("utf-8")
+            conn.close()
+
+            res = json.loads(res_raw)
+
+            if 'results' in res:
+                things = res['results']
+            else:
+                things = []
+
+            return things
+
+        def search_drugs(self, active_ingredient, limit=10):
+            """
+            Search for drugs given an active ingredient drug_name
+            :param drug_name: name of the drug to search
+            :param limit: Number of items to be included in the list
+            :return: a JSON list with the results
+            """
+
+            # drug_name for example: acetylsalicylic
+
+            query = 'search=active_ingredient:"%s"' % active_ingredient
+
+            if limit:
+                query += "&limit=" + str(limit)
+
+            drugs = self.send_query(query)
+            return drugs
+
+        def list_drugs(self, limit=10):
+            """
+            List default drugs
+            :param limit: Number of items to be included in the list
+            :return: a JSON list with the results
+            """
+
+            query = "limit=" + str(limit)
+
+            drugs = self.send_query(query)
+
+            return drugs
+
+        def search_companies(self, company_name, limit=10):
+
+            #Here we search companies given by the client
+
+            query = 'search=openfda.manufacturer_name:"%s"' % company_name
+
+            if limit:
+                query += "&limit=" + str(limit)
+
+            drugs = self.send_query(query)
+
+            return drugs
 
 
 Handler = testHTTPRequestHandler
@@ -270,4 +254,3 @@ httpd = socketserver.TCPServer(("", PORT), Handler)
 print("serving at port", PORT)
 httpd.serve_forever()
 
-# https://github.com/joshmaker/simple-python-webserver/blob/master/server.py
