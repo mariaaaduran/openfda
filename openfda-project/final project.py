@@ -111,11 +111,8 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 class Parser():
 
     def parse_companies(self, drugs):
-        """
-        Given a OpenFDA result, extract the drugs data
-        :param drugs: result form a call to OpenFDA drugs API
-        :return: list with companies info
-        """
+
+        #Given a OpenFDA result, we obtain the data corresponding to the drugs
 
         companies = []
         for drug in drugs:
@@ -129,10 +126,8 @@ class Parser():
         return companies
 
     def parse_drugs(self, drugs):
-        """
-        :param drugs: result form a call to OpenFDA drugs API
-        :return: list with drugs info
-        """
+
+        #The parameter obtaained, gives as a result the list of drugs:
 
         drugs_labels = []
 
@@ -167,19 +162,16 @@ class Parser():
     class Client():
 
         def send_query(self, query):
-            """
-            Send a query to the OpenFDA API
-            :param query: query to be sent
-            :return: the result of the query in JSON format
-            """
+
+            #The query specified by the client will return the list where it is sent.
+
 
             headers = {'User-Agent': 'http-client'}
 
             conn = http.client.HTTPSConnection("api.fda.gov")
 
-            # Get a  https://api.fda.gov/drug/label.json drug label from this URL and
-            # extract what is the id,
-            # the purpose of the drug and the manufacturer_name
+            # From https://api.fda.gov/drug/label.json we get the drug labelled and its characteristics:
+
 
             query_url = "/drug/label.json"
 
@@ -204,14 +196,9 @@ class Parser():
             return things
 
         def search_drugs(self, active_ingredient, limit=10):
-            """
-            Search for drugs given an active ingredient drug_name
-            :param drug_name: name of the drug to search
-            :param limit: Number of items to be included in the list
-            :return: a JSON list with the results
-            """
 
-            # drug_name for example: acetylsalicylic
+            #With this function we´ll get the active igredient given by drugs and the limit that will limitate the number of items.
+
 
             query = 'search=active_ingredient:"%s"' % active_ingredient
 
@@ -222,11 +209,8 @@ class Parser():
             return drugs
 
         def list_drugs(self, limit=10):
-            """
-            List default drugs
-            :param limit: Number of items to be included in the list
-            :return: a JSON list with the results
-            """
+
+            #Here we define the limit, that indicated the number of items that the web will return:
 
             query = "limit=" + str(limit)
 
