@@ -65,7 +65,7 @@ class WebServer(threading.Thread):
 
     def run(self):
         # Start the web server in a thread. It will be killed once tests have finished
-        cmd = [PYTHON_CMD, 'server.py']
+        cmd = [PYTHON_CMD, 'server1.py']
         proc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
         TestOpenFDA.WEBSERVER_PROC = proc
         outs, errs = proc.communicate()
@@ -195,3 +195,7 @@ class TestOpenFDA(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(warnings='ignore')
+
+
+
+
