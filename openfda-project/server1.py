@@ -27,14 +27,14 @@ class Client():
         # extract what is the id,
         # the purpose of the drug and the manufacturer_name
 
-        query_url = "/drug/label.json"
+        url_with_the_query = "/drug/label.json"
 
         if query:
-            query_url += "?" + query
+            url_with_the_query += "?" + query
 
-        print("Sending to OpenFDA the query", query_url)
+        print("Sending to OpenFDA the query", url_with_the_query)
 
-        conn.request("GET", query_url, None, headers)
+        conn.request("GET", url_with_the_query, None, headers)
         r1 = conn.getresponse()
         print(r1.status, r1.reason)
         res_raw = r1.read().decode("utf-8")
@@ -280,14 +280,14 @@ class Client():
         # extract what is the id,
         # the purpose of the drug and the manufacturer_name
 
-        query_url = "/drug/label.json"
+        url_with_the_query = "/drug/label.json"
 
         if query:
-            query_url += "?" + query
+            url_with_the_query += "?" + query
 
-        print("Sending to OpenFDA the query", query_url)
+        print("Sending to OpenFDA the query", url_with_the_query)
 
-        conn.request("GET", query_url, None, headers)
+        conn.request("GET", url_with_the_query, None, headers)
         r1 = conn.getresponse()
         print(r1.status, r1.reason)
         res_raw = r1.read().decode("utf-8")
