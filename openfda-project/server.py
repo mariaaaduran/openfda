@@ -160,28 +160,24 @@ class OpenFDAHTML():
             return html_file.read()
 
 
-# Refactored HTTPRequestHandler class
 class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     # Handle all the GET Requests
     def do_GET(self):
         """
-        the server will respond to all the paths such as: /, searchDrug?drug=<drug_name>
-        searchCompany?company=<company_name>, listDrugs, listcompanies_info, listWarnings
-        additionally it will also keep track of limits for each of these listings
-        on GET cmd
+        The server will response to the preferences of the client, giving his correspondant responses.
         """
 
-        # initialize the classes objects
+        # First, we establish the object classes.
         client = OpenFDAClient()
         html_builder = OpenFDAHTML()
         json_parser = OpenFDAParser()
 
-        # generic response for any urls except the defined one
+        #Generic response for any urls except the defined one
         response_code = 404
         response = html_builder.show_page_not_found()
 
         if self.path == "/":
-            # Return home page
+            # This is to return to the home page
             with open("index.html") as f:
                 response = f.read()
 
@@ -227,7 +223,6 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             result = client.list_drugs(limit)
             response = html_builder.build_html_list(json_parser.parse_companies_info(result))
 
-        # EXTENSION I: List Warnings
         elif 'listWarnings' in self.path:
             limit = None
             if len(self.path.split("?")) > 1:
@@ -235,7 +230,6 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             result = client.list_drugs(limit)
             response = html_builder.build_html_list(json_parser.parse_warnings(result))
 
-        # Extension IV: Redirect and Authentication
         if 'secret' in self.path:
             # set response code
             response_code = 401
