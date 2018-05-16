@@ -100,20 +100,25 @@ class Client():
         drugs_list = self.query_of_the_client(query)
 
         return drugs_list
+#Now we create the class Parser.
+#The function parser is normally using in programming to take those items in which we are interested
+#discarding the rest of items.
 
 class Parser():
 
-    def parse_companies(self, drugs_list):
-        """
-        Given a OpenFDA result, extract the drugs data
-        :param drugs: result form a call to OpenFDA drugs API
-        :return: list with companies info
-        """
+#With this function basically we are joinning the drug wuth the company, given the preferences of the client
+#th drugs´ files will be extracted and then the information corresponding to the list of companies.
 
+    def parse_companies(self, drugs_list):
+#First of all we create a list. If we find that the drug introduced by the client is in the list
+#the next step will be see if it has a corresponding manufacturer_name.
+#If this two steps are OK, the last step will be add these files to the list "Companies" with the function append:
         companies = []
         for drug in drugs_list:
             if 'openfda' in drug and 'manufacturer_name' in drug['openfda']:
                 companies.append(drug['openfda']['manufacturer_name'][0])
+#If this two steps are not followed, we will add to the list created the word unknown, because the client
+#will be asking by a drug that is not in our list or that it doensn´t have its corresponding manufacturer name.
             else:
                 companies.append("Unknown")
 
