@@ -125,25 +125,24 @@ class Parser():
             companies.append(drug['id'])
 
         return companies
-
+#Now instead of obtain the name of the companies corresponding to the drugs that the client wants,
+#We´ll only obtain the durgs corresponding to their names introduced by the client.
     def parse_drugs(self, drugs_list):
-        """
-        :param drugs: result form a call to OpenFDA drugs API
-        :return: list with drugs info
-        """
-
-        drugs_labels = []
-
+#We create the list as before, in this case called "drugs_wanted":
+        drugs_wanted = []
+#The first step to check is if the drug is in our list:
         for drug in drugs_list:
-            drug_label = drug['id']
+#Then we´ll must check if the drug wanted has a corresponding active ingredient, if it has, it´ll return it:
+            drug_wanted = drug['id']
             if 'active_ingredient' in drug:
-                drug_label += " " + drug['active_ingredient'][0]
+                drug_wanted += " " + drug['active_ingredient'][0]
+#To finsh we´ll also check if the durg has a corresponding manufacturer name:
             if 'openfda' in drug and 'manufacturer_name' in drug['openfda']:
-                drug_label += " " + drug['openfda']['manufacturer_name'][0]
+                drug_wanted += " " + drug['openfda']['manufacturer_name'][0]
+#And if all this steps are OK, we´ll add to our list created the drug wanted:
+            drugs_wanted.append(drug_wanted)
 
-            drugs_labels.append(drug_label)
-
-        return drugs_labels
+        return drugs_wanted
 
     def parse_warnings(self, drugs_list):
         """
