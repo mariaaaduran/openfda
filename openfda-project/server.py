@@ -29,65 +29,56 @@ class HTML():
             html = html_file.read()
 
         return html
-
+#Now it´s the time of the Client part, we know that principal direction of the web is "api.fda.gov", followed by "/drug/label.json"
+#This complete direction has access to all the list of the drugs, companies...But what we want to do is make easier the life to the client
+#So if  the client enters a key word, the search will be more effective, this is the reason why the variable query is created.
 class Client():
 
-    def send_query(self, query):
-        """
-        Send a query to the OpenFDA API
-        :param query: query to be sent
-        :return: the result of the query in JSON format
-        """
+    def query_of_the_client(self, query):
 
         headers = {'User-Agent': 'http-client'}
 
         conn = http.client.HTTPSConnection("api.fda.gov")
 
-        # Get a  https://api.fda.gov/drug/label.json drug label from this URL and
-        # extract what is the id,
-        # the purpose of the drug and the manufacturer_name
 
         query_url = "/drug/label.json"
 
+        #With this function we are allowing the client access to the url to introduce the query (key word for the search):
         if query:
             query_url += "?" + query
 
-        print("Sending to OpenFDA the query", query_url)
+        print("The query introduced by the server is being sent:", query_url)
 
         conn.request("GET", query_url, None, headers)
         r1 = conn.getresponse()
         print(r1.status, r1.reason)
-        res_raw = r1.read().decode("utf-8")
+        #With the variable ... we read and the response given and then we decode it
+        #to a standar format used in programming the "utf-8"
+        answer_utf = r1.read().decode("utf-8")
         conn.close()
 
-        res = json.loads(res_raw)
-
-        if 'results' in res:
-            components_of_the_list = res['results']
+        answer = json.loads(answer_utf)
+#Now with this lines we tell the server to answer with the list of components:
+        if 'results' in answer:
+            components_of_the_list = answer['results']
         else:
             components_of_the_list = []
 
         return components_of_the_list
-
+#To define the search of drugs; we tell the client to enter a name of a drug and a limit, to know
+#how many names of drugs he want to receive, the prgram will return the list with the results
+#claimed by the patient:
     def search_drugs(self, active_ingredient, limit=10):
-        """
-        Search for drugs given an active ingredient drug_name
-        :param drug_name: name of the drug to search
-        :param limit: Number of items to be included in the list
-        :return: a JSON list with the results
-        """
-
-        # drug_name for example: acetylsalicylic
 
         query = 'search=active_ingredient:"%s"' % active_ingredient
 
         if limit:
             query += "&limit=" + str(limit)
 
-        drugs = self.send_query(query)
-        return drugs
+        drugs_list = self.query_of_the_client(query)
+        return drugs_list
 
-    def list_drugs(self, limit=10):
+    def list_drugs_limit(self, limit=10):
         """
         List default drugs
         :param limit: Number of items to be included in the list
@@ -96,9 +87,9 @@ class Client():
 
         query = "limit=" + str(limit)
 
-        drugs = self.send_query(query)
+        drugs_list = self.query_of_the_client(query)
 
-        return drugs
+        return drugs_list
 
     def search_companies(self, company_name, limit=10):
         """
@@ -112,13 +103,13 @@ class Client():
         if limit:
             query += "&limit=" + str(limit)
 
-        drugs = self.send_query(query)
+        drugs_list = self.query_of_the_client(query)
 
-        return drugs
+        return drugs_list
 
 class Parser():
 
-    def parse_companies(self, drugs):
+    def parse_companies(self, drugs_list):
         """
         Given a OpenFDA result, extract the drugs data
         :param drugs: result form a call to OpenFDA drugs API
@@ -126,7 +117,7 @@ class Parser():
         """
 
         companies = []
-        for drug in drugs:
+        for drug in drugs_list:
             if 'openfda' in drug and 'manufacturer_name' in drug['openfda']:
                 companies.append(drug['openfda']['manufacturer_name'][0])
             else:
@@ -136,7 +127,7 @@ class Parser():
 
         return companies
 
-    def parse_drugs(self, drugs):
+    def parse_drugs(self, drugs_list):
         """
         :param drugs: result form a call to OpenFDA drugs API
         :return: list with drugs info
@@ -144,7 +135,7 @@ class Parser():
 
         drugs_labels = []
 
-        for drug in drugs:
+        for drug in drugs_list:
             drug_label = drug['id']
             if 'active_ingredient' in drug:
                 drug_label += " " + drug['active_ingredient'][0]
@@ -155,7 +146,7 @@ class Parser():
 
         return drugs_labels
 
-    def parse_warnings(self, drugs):
+    def parse_warnings(self, drugs_list):
         """
         Given a OpenFDA result, extract the warnings data
         :param drugs: result form a call to OpenFDA drugs API
@@ -164,7 +155,7 @@ class Parser():
 
         warnings = []
 
-        for drug in drugs:
+        for drug in drugs_list:
             if 'warnings' in drug and drug['warnings']:
                 warnings.append(drug['warnings'][0])
             else:
@@ -215,7 +206,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             limit = None
             if len(self.path.split("?")) > 1:
                 limit = self.path.split("?")[1].split("=")[1]
-            components_of_the_list = client.list_drugs(limit)
+            components_of_the_list = client.list_drugs_limit(limit)
             http_response = html_vis.create_list_HTML(parser.parse_drugs(components_of_the_list))
         elif 'searchCompany' in self.path:
             company_name = None
@@ -234,13 +225,13 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             limit = None
             if len(self.path.split("?")) > 1:
                 limit = self.path.split("?")[1].split("=")[1]
-            components_of_the_list = client.list_drugs(limit)
+            components_of_the_list = client.list_drugs_limit(limit)
             http_response = html_vis.create_list_HTML(parser.parse_companies(components_of_the_list))
         elif 'listWarnings' in self.path:
             limit = None
             if len(self.path.split("?")) > 1:
                 limit = self.path.split("?")[1].split("=")[1]
-            components_of_the_list = client.list_drugs(limit)
+            components_of_the_list = client.list_drugs_limit(limit)
             http_response = html_vis.create_list_HTML(parser.parse_warnings(components_of_the_list))
         else:
             http_response_code = 404
