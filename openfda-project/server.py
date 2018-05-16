@@ -126,39 +126,40 @@ class Parser():
 
         return drugs_wanted
 
+
+
     def parse_companies(self, drugs_list):
 #First of all we create a list. If we find that the drug introduced by the client is in the list
 #the next step will be see if it has a corresponding manufacturer_name.
 #If this two steps are OK, the last step will be add these files to the list "Companies" with the function append:
-        companies = []
+        companies_info = []
         for drug in drugs_list:
             if 'openfda' in drug and 'manufacturer_name' in drug['openfda']:
-                companies.append(drug['openfda']['manufacturer_name'][0])
-#If this two steps are not followed, we will add to the list created the word unknown, because the client
+                companies_info.append(drug['openfda']['manufacturer_name'][0])
+#If this two steps are not followed, we will add to the list the message of "It has been an error...", because the client
 #will be asking by a drug that is not in our list or that it doensn´t have its corresponding manufacturer name.
             else:
-                companies.append("Unknown")
+                companies_info.append("There has been an error, check if you drug is in the list!")
 
-            companies.append(drug['id'])
+            companies_info.append(drug['id'])
 
-        return companies
+        return companies_info
 #Now instead of obtain the name of the companies corresponding to the drugs that the client wants,
 #We´ll only obtain the durgs corresponding to their names introduced by the client.
-    def parse_warnings(self, drugs_list):
-        """
-        Given a OpenFDA result, extract the warnings data
-        :param drugs: result form a call to OpenFDA drugs API
-        :return: list with warnings info
-        """
 
-        warnings = []
+
+#And to finish the class parser, we do the same procedement that with the companies´ names and with the drugs, but this time with the warnings:
+    def parse_warnings(self, drugs_list):
+#We create our list, in this case called "warnings" and we check if the durg wanted is in our list and if
+#it has corresponding warnings it will add to our thist the info, if not, it will return the message that there is an error:
+        warnings_info = []
 
         for drug in drugs_list:
             if 'warnings' in drug and drug['warnings']:
-                warnings.append(drug['warnings'][0])
+                warnings_info.append(drug['warnings'][0])
             else:
-                warnings.append("None")
-        return warnings
+                warnings_info.append("There has been an error, check if your drug is in the list!")
+        return warnings_info
 
 
 class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
@@ -169,9 +170,9 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         API to be supported
         searchDrug?drug=<drug_name>
         searchCompany?company=<company_name>
-        listDrugs
-        listCompanies
-        listWarnings
+        listDrugs_wanted
+        listCompanies_info
+        listWarnings_info
         """
 
         client = Client()
@@ -218,13 +219,13 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     limit = param_value
             components_of_the_list = client.looking_for_companies_limit(company_name, limit)
             http_response = html_vis.create_list_HTML(parser.parse_companies(components_of_the_list))
-        elif 'listCompanies' in self.path:
+        elif 'listCompanies_info' in self.path:
             limit = None
             if len(self.path.split("?")) > 1:
                 limit = self.path.split("?")[1].split("=")[1]
             components_of_the_list = client.list_drugs_limit(limit)
             http_response = html_vis.create_list_HTML(parser.parse_companies(components_of_the_list))
-        elif 'listWarnings' in self.path:
+        elif 'listWarnings_info' in self.path:
             limit = None
             if len(self.path.split("?")) > 1:
                 limit = self.path.split("?")[1].split("=")[1]
