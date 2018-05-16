@@ -162,10 +162,10 @@ class Parser():
         return warnings_info
 
 
-class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
-    # GET
-    def do_GET(self):
+#To finsh we stablish the class testHTTPRequestHandler:
+class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
+    def get_function(self):
         """
         API to be supported
         searchDrug?drug=<drug_name>
