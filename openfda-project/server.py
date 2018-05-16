@@ -175,7 +175,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
         if self.path == "/":
             # Return home page
-            with open("index.html") as f:
+            with open("openfda.html") as f:
                 response = f.read()
 
         if 'searchDrug' in self.path:
