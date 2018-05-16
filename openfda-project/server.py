@@ -57,7 +57,7 @@ class OpenFDAClient():
         if limit:
             params += "&limit=" + str(limit)
         drugs = self.set_arguments(params)
-        return drugs["results"] if 'results' in drugs else []
+        return drugs ["results"] if 'results' in drugs else []
 
     def search_companies_info(self, company_name, limit=10):
         """
