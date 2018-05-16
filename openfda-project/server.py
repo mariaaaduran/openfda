@@ -82,11 +82,13 @@ class OpenFDAClient():
         return drugs
 
 
-# EXTENSION III: includes the logic to extract the data from drugs result.
+
 class OpenFDAParser():
     def parse_drugs(self, drugs):
         """
-        parse drugs information from the openfda api
+        The parse function  helps us to select only the items that the client wants. Thanks to it, we give the client a more specific response.
+        We create a list ("drugs_labels") and we check that the drug wanted by the client in is the list and that it has his corresponding manufacturer_name.
+        If these two steps are checked, we add to the list the drug, with the function append
         """
 
         drugs_labels = []
@@ -104,7 +106,10 @@ class OpenFDAParser():
 
     def parse_companies_info(self, drugs):
         """
-        Parse extracted drugs data and list all company info
+        In this part we repite the steps as before, bu this time we are going to work with the companies´
+        names and their corresponding drugs.
+        As before we create a list and we check that the durg, the company, the manufacturer name, etc...exist
+        If they do, we add, with the function append to our list ("Companies_info").
         """
         companies_info = []
         for drug in drugs:
@@ -117,10 +122,11 @@ class OpenFDAParser():
 
         return companies_info
 
-    # EXTENSION I: list warnings
+
     def parse_warnings(self, drugs):
         """
-        Parse the warnings data and extract warnings
+        To finish the part of the class OpenFDAParser(), we do the same but this time with the warnings.
+        Create the list, the checking and finally the addition with the appennd function.
         """
 
         warnings = []
@@ -133,11 +139,12 @@ class OpenFDAParser():
         return warnings
 
 
-# EXTENSION III: includes the logic to the HTML visualization.
+
 class OpenFDAHTML():
     def build_html_list(self, result):
         """
-        Build the unorder list of html from the result
+        At the class OpenFDAHTML we establish the html part.
+        Also the web corresponding to the ERROR: not found
         """
 
         html_list = "<ul>"
@@ -147,7 +154,7 @@ class OpenFDAHTML():
 
         return html_list
 
-    # EXTENSION II: 404 PAGE
+    #ERROR HTML
     def show_page_not_found(self):
         with open("page_not_found.html") as html_file:
             return html_file.read()
@@ -235,19 +242,19 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             # send additonal header
             self.send_header('WWW-Authenticate', ' WWW-Authenticate de basic Realm')
         elif 'redirect' in self.path:
-            # set response code
+            # Set response code
             response_code = 302
-            # send redirect headers
+            # Send redirect headers
             self.send_header('Location', 'http://localhost:8000/')
 
-        # Send response status code
+        # Send response status code:
         self.send_response(response_code)
 
-        # Send generic headers
+        # Send headers:
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-        # show html response
+        # Show html response:
         self.wfile.write(bytes(response, "utf8"))
 
 
