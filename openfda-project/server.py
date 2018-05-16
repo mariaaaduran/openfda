@@ -21,10 +21,11 @@ IP = '127.0.0.1'
 class OpenFDAClient():
     def set_arguments(self, params):
         """
-        Query openfda with desired parameters for example -> ?limit = 10
+        The connection will be given to the direction: "api.fda.gov/drug/label.json" the parameters will be
+        added to it, and will specify more the search
         """
 
-        # set user agent
+
         headers = {'User-Agent': 'http-client'}
 
         # Make a connection to the HTTPS client:
@@ -44,24 +45,23 @@ class OpenFDAClient():
         data = response.read().decode("utf-8")
         con.close()
 
-        # parse json response
+        # Now we put the results in json format:
         result = json.loads(data)
         return result['results'] if 'results' in result else []
 
     def search_drugs(self, active_ingredient, limit=10):
         """
-        Search for drugs given an active ingredient drug_name with limit default is 10
-        """
+        We define the search of the drugs, and the limit (10), only 10 items will appear       """
         params = 'search=active_ingredient:"{}"'.format(active_ingredient)
 
         if limit:
             params += "&limit=" + str(limit)
         drugs = self.set_arguments(params)
-        return drugs['results'] if 'results' in drugs else []
+        return drugs["results"] if 'results' in drugs else []
 
     def search_companies_info(self, company_name, limit=10):
         """
-        Search for companies_info given a company_name with optional limit default is 10
+        We do the same fo the search of the companies_info given a company_name with optional limit default is 10
         """
         params = 'search=openfda.manufacturer_name:"%s"' % company_name
         if limit:
@@ -72,7 +72,7 @@ class OpenFDAClient():
 
     def list_drugs(self, limit=10):
         """
-        List default drugs from the api the default limit is 10
+        We will botain the resquested list of drugs!!!
         """
 
         params = "limit=" + str(limit)
