@@ -86,16 +86,14 @@ class Client():
         drugs_list = self.query_of_the_client(query)
 
         return drugs_list
-
-    def looking_for_companies(self, company_name, limit=10):
-        """
-        Search for companies given a company_name
-        :param company_name: name of the company to search
-        :return: a JSON list with the results
-        """
+#Now we have to do the same procedement that with the function defined by us called "looking_for_drugs" but with
+#the name of the companies to which these drugs belong to.
+#As before, the client must enter the name of the company and it ´ll be retuned a list with all the names of the companies.
+    def looking_for_companies_limit(self, company_name, limit=10):
 
         query = 'search=openfda.manufacturer_name:"%s"' % company_name
-
+#Now we have to limitate the number of companies name that the client will receive in function of his preferences, and we do
+#the same procedement as with the limit of the list of drugs.
         if limit:
             query += "&limit=" + str(limit)
 
@@ -215,7 +213,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     company_name = param_value
                 elif param_name == 'limit':
                     limit = param_value
-            components_of_the_list = client.looking_for_companies(company_name, limit)
+            components_of_the_list = client.looking_for_companies_limit(company_name, limit)
             http_response = html_vis.create_list_HTML(parser.parse_companies(components_of_the_list))
         elif 'listCompanies' in self.path:
             limit = None
