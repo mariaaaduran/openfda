@@ -68,7 +68,7 @@ class Client():
 #To define the search of drugs; we tell the client to enter a name of a drug and a limit, to know
 #how many names of drugs he want to receive, the prgram will return the list with the results
 #claimed by the patient:
-    def search_drugs(self, active_ingredient, limit=10):
+    def looking_for_drugs(self, active_ingredient, limit=10):
 
         query = 'search=active_ingredient:"%s"' % active_ingredient
 
@@ -77,13 +77,9 @@ class Client():
 
         drugs_list = self.query_of_the_client(query)
         return drugs_list
-
+#Now it´s the turn to incoporate the function limit, so the client doesn´t receive all the list, only
+#the number of drugs that he want, if he introduces 10 as the limit, he will receive 10 drugs.
     def list_drugs_limit(self, limit=10):
-        """
-        List default drugs
-        :param limit: Number of items to be included in the list
-        :return: a JSON list with the results
-        """
 
         query = "limit=" + str(limit)
 
@@ -91,7 +87,7 @@ class Client():
 
         return drugs_list
 
-    def search_companies(self, company_name, limit=10):
+    def looking_for_companies(self, company_name, limit=10):
         """
         Search for companies given a company_name
         :param company_name: name of the company to search
@@ -200,7 +196,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     active_ingredient = param_value
                 elif param_name == 'limit':
                     limit = param_value
-            components_of_the_list = client.search_drugs(active_ingredient, limit)
+            components_of_the_list = client.looking_for_drugs(active_ingredient, limit)
             http_response = html_vis.create_list_HTML(parser.parse_drugs(components_of_the_list))
         elif 'listDrugs' in self.path:
             limit = None
@@ -219,7 +215,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     company_name = param_value
                 elif param_name == 'limit':
                     limit = param_value
-            components_of_the_list = client.search_companies(company_name, limit)
+            components_of_the_list = client.looking_for_companies(company_name, limit)
             http_response = html_vis.create_list_HTML(parser.parse_companies(components_of_the_list))
         elif 'listCompanies' in self.path:
             limit = None
