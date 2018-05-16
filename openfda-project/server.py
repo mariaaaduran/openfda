@@ -109,6 +109,23 @@ class Parser():
 #With this function basically we are joinning the drug wuth the company, given the preferences of the client
 #th drugs´ files will be extracted and then the information corresponding to the list of companies.
 
+    def parse_drugs(self, drugs_list):
+#We create the list as before, in this case called "drugs_wanted":
+        drugs_wanted = []
+#The first step to check is if the drug is in our list:
+        for drug in drugs_list:
+#Then we´ll must check if the drug wanted has a corresponding active ingredient, if it has, it´ll return it:
+            drug_wanted = drug['id']
+            if 'active_ingredient' in drug:
+                drug_wanted += " " + drug['active_ingredient'][0]
+#To finsh we´ll also check if the durg has a corresponding manufacturer name:
+            if 'openfda' in drug and 'manufacturer_name' in drug['openfda']:
+                drug_wanted += " " + drug['openfda']['manufacturer_name'][0]
+#And if all this steps are OK, we´ll add to our list created the drug wanted:
+            drugs_wanted.append(drug_wanted)
+
+        return drugs_wanted
+
     def parse_companies(self, drugs_list):
 #First of all we create a list. If we find that the drug introduced by the client is in the list
 #the next step will be see if it has a corresponding manufacturer_name.
@@ -127,23 +144,6 @@ class Parser():
         return companies
 #Now instead of obtain the name of the companies corresponding to the drugs that the client wants,
 #We´ll only obtain the durgs corresponding to their names introduced by the client.
-    def parse_drugs(self, drugs_list):
-#We create the list as before, in this case called "drugs_wanted":
-        drugs_wanted = []
-#The first step to check is if the drug is in our list:
-        for drug in drugs_list:
-#Then we´ll must check if the drug wanted has a corresponding active ingredient, if it has, it´ll return it:
-            drug_wanted = drug['id']
-            if 'active_ingredient' in drug:
-                drug_wanted += " " + drug['active_ingredient'][0]
-#To finsh we´ll also check if the durg has a corresponding manufacturer name:
-            if 'openfda' in drug and 'manufacturer_name' in drug['openfda']:
-                drug_wanted += " " + drug['openfda']['manufacturer_name'][0]
-#And if all this steps are OK, we´ll add to our list created the drug wanted:
-            drugs_wanted.append(drug_wanted)
-
-        return drugs_wanted
-
     def parse_warnings(self, drugs_list):
         """
         Given a OpenFDA result, extract the warnings data
@@ -161,7 +161,6 @@ class Parser():
         return warnings
 
 
-# HTTPRequestHandler class
 class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     # GET
