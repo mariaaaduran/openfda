@@ -9,15 +9,12 @@ PORT = 8000
 
 OPENFDA_BASIC = False
 
-
+#In this part, we define the class html with the def function, we will create the web page (html) where
+#the client will introduce his key words for the search.
+#Each of the elements of the list is called with the variable "individual_component" and all of them together, "components_of_the_list".
 class HTML():
 
     def create_list_HTML(self, components_of_the_list):
-        """
-        Creates a HTML list string with the items
-        :param items: list with the items to be included in the HTML list
-        :return: string with the HTML list
-        """
 
         list_web_components = "<ul>"
         for individual_component in components_of_the_list:
